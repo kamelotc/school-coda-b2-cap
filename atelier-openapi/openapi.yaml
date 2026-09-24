@@ -280,14 +280,91 @@ paths:
   /trips/search:
     post:
       tags: [Découverte]
-      operationId:
+      operationId: searchTrips
+      summary: Rechercher un lancer
+      description: |
+        Rechercher les lancers reliant deux villes à une date donnée, pour un
+        nombre de places. Tous les lancers sont directs : aucune correspondance,
+        aucun itinéraire composé. Sans lancer direct ce jour-là, la liste est vide.
+      security: []
 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cityStartId, cityArrivalId, date, seats]
+              properties:
+
+                cityStartId:
+                  type: string
+                  format: uuid
+                  description: ville de départ
+
+                cityArrivalId:
+                  type: string
+                  format: uuid
+                  description: ville d'arriver
+
+                date:
+                  type: string
+                  format: date
+                  example: '2027-02-14'
+
+                seats:
+                  type: integer
+                  minimum: 1
+
+      responses:
+          '200':
+            description: Liste des lancers trouvés.
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TripSummary'
+                  example:
+                   - id: 6f9a1b8c-5d4e-4f6a-9b3c-1d2e3f4a5s6c
+          '400': { $ref: '#/components/responses/BadRequest' }
+          '422': { $ref: '#/components/responses/ValidationError' }
 
 
   # GET /trips/{id}
   #   Consulter le détail d'un lancer. Le détail porte ce qu'une liste de
   #   résultats n'a aucune raison de transporter pour chacune de ses lignes.
   #   Opération PUBLIQUE.
+
+  /trips/{id}:
+    get:
+      tags: [Découverte]
+      operationId: TripsId
+      description: |
+        Consulter le détail d'un lancer. Le détail porte ce qu'une liste de
+        résultats n'a aucune raison de transporter pour chacune de ses lignes.
+      security: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id unique du lancer.
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '200':
+          description: Détails du lancer.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/TripDetail'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound'}
+
 
   # ---- Panier (authentifié) ------------------------------------------------
 
@@ -299,6 +376,47 @@ paths:
   #   Récupérer le panier actif du voyageur connecté. Un voyageur n'a qu'un
   #   panier actif à la fois — et parfois aucun, ce qui est un état normal
   #   et non une erreur. Réfléchissez à ce que ça implique pour la réponse.
+
+
+
+  /carts:
+    post:
+      tags: [Panier]
+      operationId: creationCarts
+      summary: Ouvrir un panier
+      description: |
+        Ouvrir un panier vide. C'est ici que la connexion devient nécessaire :
+        la découverte est libre, la réservation est nominative.
+
+      responses:
+        '201':
+          description: Panier créé.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/Cart'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+    get:
+      tags: [Panier]
+      operationId: getCartsActive
+      summary: Récupérer son panier actif
+      description: |
+        Récupérer le panier actif du voyageur connecté. Un voyageur n'a qu'un
+        panier actif .
+
+      responses:
+          '200':
+            description: Le panier actif du voyageur.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Cart'
+          '204':
+            description: Aucun panier actif en cours.
+          '401': { $ref: '#/components/responses/Unauthorized' }
+
+
 
   # POST /carts/{id}/items
   #   Ajouter un lancer au panier, avec un nombre de places.

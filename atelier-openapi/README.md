@@ -83,3 +83,14 @@ Vous pouvez importer `openapi.yaml` dans Bruno pour générer votre collection :
 requêtes viennent de votre propre contrat.
 
 N'écrivez pas les douze opérations avant de tester la première.
+
+
+
+# IA
+
+Utilisation de l’IA en mode pédagogique (sans fournir les réponses)
+sur l’opération `cities` et le schéma `TripSummary`.
+Ainsi qu’à certains moments lorsque je ne me rappelais plus le nom de certaines fonctions ou autres
+
+
+
