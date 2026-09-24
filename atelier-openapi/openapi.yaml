@@ -220,6 +220,47 @@ paths:
 
   # ---- Découverte (public) -------------------------------------------------
 
+  /cities:
+      get:
+        tags: [Découvert]
+        operationId: getCities
+        summary: Rechercher une ville desservie
+        description: |
+         Rechercher une ville desservie, par filtre textuel.
+         Chaque ville du réseau possède une catapulte unique en son centre.
+        security: []
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginRequest'
+        responses:
+          '200':
+            description: ville saisi
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Cities'
+
+          '400': { $ref: '#/components/responses/BadRequest' }
+          '401':
+                description: Ville non desservi.
+                content:
+                  application/problem+json:
+                  schema:
+                    $ref: '#/components/schemas/Problem'
+                    example:
+                    type: 'https://api.catapulte-connect.ontb.example/errors/invalid-credentials'
+                    title: Villes non desservi
+                    status: 401
+                    detail: Cette ville n'est pas desservi par Catapulte
+                '422': { $ref: '#/components/responses/ValidationError' }
+
+
+
+
+
   # GET /cities
   #   Rechercher une ville desservie, par filtre textuel.
   #   Chaque ville du réseau possède une catapulte unique en son centre.
@@ -491,6 +532,8 @@ components:
     #    - Deux schémas se ressemblent-ils au point que l'un compose l'autre ?
     #    - Une valeur n'a-t-elle qu'un jeu de possibilités connu d'avance ?
     # ==========================================================================
+
+    City:
 
     # City
     #   Une ville desservie. Chaque ville possède une catapulte unique en son
