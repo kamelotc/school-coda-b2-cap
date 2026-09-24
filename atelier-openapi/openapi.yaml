@@ -220,51 +220,57 @@ paths:
 
   # ---- Découverte (public) -------------------------------------------------
 
+
+  # GET /cities
+  #   Rechercher une ville desservie, par filtre textuel.
+  #   Chaque ville du réseau possède une catapulte unique en son centre.
+  #   Opération PUBLIQUE : on cherche sans être connecté.
+
+
   /cities:
       get:
-        tags: [Découvert]
+        tags: [Découverte]
         operationId: getCities
         summary: Rechercher une ville desservie
         description: |
          Rechercher une ville desservie, par filtre textuel.
          Chaque ville du réseau possède une catapulte unique en son centre.
         security: []
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginRequest'
+
+        parameters:
+          - name: q
+            in: query
+            required: false
+            description: Filtre textuel sur le nom de la ville.
+            schema:
+              type: string
+            example: Dijon
+          - name: limit
+            in: query
+            required: false
+            description: Nombre maximum de villes retournées.
+            schema:
+              type: integer
+              minimum: 1
+              maximum: 100
+              default: 20
+
         responses:
           '200':
-            description: ville saisi
+            description: Villes venant du filtre.
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/Cities'
-
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/City'
+                example:
+                  - id: 6f9a1b8c-5d4e-4f6a-9b3c-1d2e3f4a5s6c
+                    name: Dijon
           '400': { $ref: '#/components/responses/BadRequest' }
-          '401':
-                description: Ville non desservi.
-                content:
-                  application/problem+json:
-                  schema:
-                    $ref: '#/components/schemas/Problem'
-                    example:
-                    type: 'https://api.catapulte-connect.ontb.example/errors/invalid-credentials'
-                    title: Villes non desservi
-                    status: 401
-                    detail: Cette ville n'est pas desservi par Catapulte
-                '422': { $ref: '#/components/responses/ValidationError' }
+          '422': { $ref: '#/components/responses/ValidationError' }
 
 
-
-
-
-  # GET /cities
-  #   Rechercher une ville desservie, par filtre textuel.
-  #   Chaque ville du réseau possède une catapulte unique en son centre.
-  #   Opération PUBLIQUE : on cherche sans être connecté.
 
   # POST /trips/search
   #   Rechercher les lancers reliant deux villes à une date donnée, pour un
@@ -533,26 +539,128 @@ components:
     #    - Une valeur n'a-t-elle qu'un jeu de possibilités connu d'avance ?
     # ==========================================================================
 
-    City:
-
     # City
     #   Une ville desservie. Chaque ville possède une catapulte unique en son
     #   centre, qui sert à la fois de point de lancement et de réception.
 
+
+    City:
+      type: object
+      description: Ville desservie. Chaque ville possède une catapulte unique en son centre, qui sert à la fois de point de lancement et de réception.
+      required: [ id, name ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3f2a1b8c-5d4e-4f6a-9b8c-1d2e3f4a5b6c
+        name:
+          type: string
+          example: Dijon
+
     # TripSummary
     #   Un lancer tel qu'il apparaît dans une liste de résultats : de quoi
     #   choisir, pas de quoi préparer son voyage.
+
+    TripSummary:
+      type: object
+      description: Un lancer tel qu'il apparaît dans une liste de résultats,de quoi choisir, pas de quoi préparer son voyage.
+      required: [ id, cityStart, cityArrival, throwTime, duration, price ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 6f9a1b8c-5d4e-4f6a-9b3c-1d2e3f4a5s6c
+
+        cityStart:
+          $ref: '#/components/schemas/City'
+
+        cityArrival:
+          $ref: '#/components/schemas/City'
+
+        throwTime:
+          type: string
+          format: date-time
+          example: '2027-02-14T10:03:00Z'
+
+        duration:
+          type: integer
+          example: 65
+
+        price:
+          type: number
+          example: 35
+          description: Prix pour une place.
+
 
     # TripDetail
     #   Le même lancer, consulté seul. Il ajoute ce dont on a besoin une fois
     #   qu'on l'a choisi — notamment la franchise de masse, qui n'est pas ici
     #   une limite commerciale mais balistique.
 
+    TripDetail:
+      description: Le même lancer, consulté seul. Il ajoute ce dont on a besoin une fois qu'on l'a choisi — notamment la franchise de masse, qui est une limite balistique.
+      allOf:
+        - $ref: '#/components/schemas/TripSummary'
+        - type: object
+          required: [ massAllowance, catapultModel, boardingInstruction ]
+          properties:
+
+                massAllowance:
+                    type: number
+                    example: 70
+
+                catapultModel:
+                    type: string
+                    example: catapulte M23
+
+                boardingInstruction:
+                    type: string
+                    example: casque obligatoire
+
+
     # Cart
     #   Un panier de réservation. Il connaît son état, ses lignes, et son total.
+    
+    Cart:
+      type: object
+      description: Un panier de réservation. Il connaît son état, ses lignes, et son total.
+      required: [ id, status, itemsCart, totalAmount, createdAt ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 6f9a1b8c-5d4e-4f6a-9b3c-1d2e3f4a5s6c
+
+        status:
+          type: string
+          enum: [pending,paid]
+
+        itemsCart:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+
+        totalAmount:
+          type: number
+          example: 160
+
+        createdAt:
+          type: string
+          format: date-time
+          example: '2027-02-14T10:03:00Z'
 
     # CartItem
     #   Une ligne de panier : un lancer et un nombre de places.
 
+    CartItem:
+      type: object
+      desciption:  Une ligne de panier,un lancer et un nombre de places.
+      required: [id, ]
+
+
+
     # Ticket
     #   Un droit à embarquer sur un lancer, émis au paiement. Un par place.
+
+    Ticket:
+      
