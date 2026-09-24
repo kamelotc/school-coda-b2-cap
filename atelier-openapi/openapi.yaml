@@ -271,12 +271,18 @@ paths:
           '422': { $ref: '#/components/responses/ValidationError' }
 
 
-
   # POST /trips/search
   #   Rechercher les lancers reliant deux villes à une date donnée, pour un
   #   nombre de places. Tous les lancers sont directs : aucune correspondance,
   #   aucun itinéraire composé. Sans lancer direct ce jour-là, la liste est vide.
   #   Opération PUBLIQUE.
+
+  /trips/search:
+    post:
+      tags: [Découverte]
+      operationId:
+
+
 
   # GET /trips/{id}
   #   Consulter le détail d'un lancer. Le détail porte ce qu'une liste de
@@ -557,6 +563,7 @@ components:
           type: string
           example: Dijon
 
+
     # TripSummary
     #   Un lancer tel qu'il apparaît dans une liste de résultats : de quoi
     #   choisir, pas de quoi préparer son voyage.
@@ -649,13 +656,32 @@ components:
           format: date-time
           example: '2027-02-14T10:03:00Z'
 
+
     # CartItem
     #   Une ligne de panier : un lancer et un nombre de places.
 
     CartItem:
       type: object
-      desciption:  Une ligne de panier,un lancer et un nombre de places.
-      required: [id, ]
+      description:  Une ligne de panier,un lancer et un nombre de places.
+      required: [id, trip, seatsNumber, subTotal]
+      properties:
+
+        id:
+          type: string
+          format: uuid
+          example: 6f9a1b8c-5d4e-4f6a-9b3c-1d2e3f4a5s6c
+
+        trip:
+          $ref: '#/components/schemas/TripSummary'
+            
+        seatsNumber:
+          type: integer
+          example: 1
+
+        subTotal:
+          type: number
+          example: 50
+
 
 
 
@@ -663,4 +689,24 @@ components:
     #   Un droit à embarquer sur un lancer, émis au paiement. Un par place.
 
     Ticket:
-      
+      type: object
+      description: Un droit à embarquer sur un lancer, émis au paiement. Un par place.
+      required: [id, tripTicket, paidAmount, issuedAt]
+      properties:
+
+        id:
+          type: string
+          format: uuid
+          example: 6f9a1b8c-5d4e-4f6a-9b3c-1d2e3f4a5s6c
+
+        tripTicket:
+          $ref: '#/components/schemas/TripSummary'
+
+        paidAmount:
+          type: number
+          example: 50
+
+        issuedAt:
+          type: string
+          format: date-time
+          example: '2027-02-14T10:03:00Z'
